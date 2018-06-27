@@ -108,7 +108,9 @@
        Should consider updating the OSMF and TLF versions in use.
     -->
     
-    <target name="compile" description="Builds all SWCs but not their resource bundles" depends="flex-config">
+    <target name="compile" description="Builds all SWCs but not their resource bundles" depends="flex-config,all.compile,flash-integration.compile,automation.compile" />
+
+    <target name="all.compile">
         <antcall target="framework"/>
         <antcall target="mx"/>
         <antcall target="textLayout"/>
@@ -119,11 +121,10 @@
         <antcall target="sparkskins"/>
         <antcall target="spark_dmv"/>
         <antcall target="airframework"/>
-        <antcall target="airspark"/>        
-        <antcall target="mobilecomponents"/>        
-        <antcall target="mobiletheme"/>     
+        <antcall target="airspark"/>
+        <antcall target="mobilecomponents"/>
+        <antcall target="mobiletheme"/>
         <antcall target="core"/>
-        <antcall target="flash_integration"/>
         <antcall target="authoringsupport"/>
         <antcall target="halo"/>
         <antcall target="wireframe"/>
@@ -131,8 +132,15 @@
     	<antcall target="apache"/>
     	<antcall target="experimental"/>
     	<antcall target="experimental_mobile"/>
-        <antcall target="compile-automation"/>
         <antcall target="flatspark"/>
+    </target>
+
+    <target name="flash-integration.compile" unless="isLinux">
+        <antcall target="flash_integration" />
+    </target>
+
+    <target name="automation.compile">
+        <antcall target="compile-automation"/>
     </target>
 	
     <target name="test" description="Runs the tests for all projects that have FlexUnit tests">
@@ -142,6 +150,7 @@
         <antcall target="spark-test"/>
         <antcall target="advancedgrids-test"/>
         <antcall target="framework-test"/>
+        <antcall target="mx-test"/>
     </target>
 
 	<target name="flex-config" depends="playerglobal-setswfversion" description="Copy the flex/air/airmobile config templates to flex/air/airmobile-config.xml and inject version numbers">
@@ -249,19 +258,24 @@
     <!--
         automation: tool was formerly qtp and tool_air was formerly qtp_air
     -->
-    <target name="compile-automation" description="Builds all automation SWCs but not their resource bundles">
+    <target name="compile-automation" description="Builds all automation SWCs but not their resource bundles" depends="compile-automation-others, compile-automation-flashflexkit" />
+
+    <target name="compile-automation-others" unless="isLinux">
         <antcall target="automation_agent"/>
         <antcall target="automation_dmv"/>
         <antcall target="tool"/>
         <antcall target="automation"/>
         <antcall target="tool_air"/>
         <antcall target="automation_spark"/>
-        <antcall target="automation_flashflexkit"/>
         <antcall target="automation_air"/>
         <antcall target="automation_airspark"/>
     </target>
+
+    <target name="compile-automation-flashflexkit" unless="isLinux">
+        <antcall target="automation_flashflexkit"/>
+    </target>
     
-    <target name="other.locales" description ="Builds resource SWCs for all locales">
+    <target name="other.locales" depends="flash-integration.other.locales" description ="Builds resource SWCs for all locales">
         <ant dir="${basedir}/projects/framework" target="other.locales"/>
         <ant dir="${basedir}/projects/mx" target="other.locales"/>
         <ant dir="${basedir}/projects/textLayout" target="other.locales"/>
@@ -273,7 +287,6 @@
         <ant dir="${basedir}/projects/spark" target="other.locales"/>
         <ant dir="${basedir}/projects/mobilecomponents" target="other.locales" />
         <ant dir="${basedir}/projects/playerglobal" target="other.locales" />
-        <ant dir="${basedir}/projects/flash-integration" target="other.locales"/>
         <ant dir="${basedir}/projects/automation" target="other.locales"/>
         <ant dir="${basedir}/projects/automation_agent" target="other.locales"/>
         <ant dir="${basedir}/projects/tool" target="other.locales"/>
@@ -282,8 +295,12 @@
     	<ant dir="${basedir}/projects/experimental" target="other.locales"/>
     	<ant dir="${basedir}/projects/experimental_mobile" target="other.locales"/>
     </target>
+
+    <target name="flash-integration.other.locales" unless="isLinux">
+        <ant dir="${basedir}/projects/flash-integration" target="other.locales"/>
+    </target>
     
-    <target name="doc" >
+    <target name="doc" depends="flash-integration.doc, mobiletheme.doc">
         <ant dir="${basedir}/projects/framework" target="doc" />
         <ant dir="${basedir}/projects/mx" target="doc" />
         <ant dir="${basedir}/projects/textLayout" target="doc" />
@@ -296,11 +313,9 @@
         <ant dir="${basedir}/projects/airframework" target="doc" />
         <ant dir="${basedir}/projects/airspark" target="doc" />
         <ant dir="${basedir}/projects/mobilecomponents" target="doc" />
-        <ant dir="${basedir}/projects/mobiletheme" target="doc" />
         <ant dir="${basedir}/projects/core" target="doc" />
         <ant dir="${basedir}/projects/authoringsupport" target="doc" />
         <ant dir="${basedir}/projects/wireframe" target="doc" />
-        <ant dir="${basedir}/projects/flash-integration" target="doc" />
         <!-- removed until sources donated to Apache -->
         <!--
         <ant dir="${basedir}/projects/automation" target="doc" />
@@ -309,6 +324,14 @@
     	<ant dir="${basedir}/projects/experimental" target="doc" />
     	<ant dir="${basedir}/projects/experimental_mobile" target="doc" />
         <!-- ant dir="${basedir}/projects/flatspark" target="doc" / -->
+    </target>
+
+    <target name="flash-integration.doc" unless="isLinux">
+        <ant dir="${basedir}/projects/flash-integration" target="doc" />
+    </target>
+
+    <target name="mobiletheme.doc" unless="isLinux">
+        <ant dir="${basedir}/projects/mobiletheme" target="doc" />
     </target>
    
     <!--
@@ -321,7 +344,7 @@
         <ant antfile="${basedir}/downloads.xml" target="clean" dir="${basedir}"/>
     </target>
     
-    <target name="clean" depends="check-tlf-home,automation-clean,airsdk-clean" description="Cleans all SWCs and their resource bundles">
+    <target name="clean" depends="check-tlf-home,automation-clean,airsdk-clean,flash-integration.clean" description="Cleans all SWCs and their resource bundles">
         <delete file="${basedir}/flex-config.xml"/>
         <delete file="${basedir}/air-config.xml"/>
         <delete file="${basedir}/airmobile-config.xml"/>
@@ -339,7 +362,6 @@
         <ant dir="${basedir}/projects/sparkskins" target="clean"/>
         <ant dir="${basedir}/projects/halo" target="clean"/>
         <ant dir="${basedir}/projects/wireframe" target="clean"/>
-        <ant dir="${basedir}/projects/flash-integration" target="clean"/>
         <ant dir="${basedir}/projects/rpc" target="clean"/>
         <ant dir="${basedir}/projects/authoringsupport" target="clean"/>
         <ant dir="${basedir}/projects/charts" target="clean"/>
@@ -371,6 +393,10 @@
         <delete file="macFonts.ser"/>
         <delete file="winFonts.ser"/>
     </target>
+
+    <target name="flash-integration.clean" unless="isLinux">
+        <ant dir="${basedir}/projects/flash-integration" target="clean"/>
+    </target>
     
     <target name="automation-clean" description="Builds all automation SWCs but not their resource bundles">
         <ant dir="${basedir}/projects/automation_agent" target="clean"/>
@@ -383,7 +409,6 @@
         <ant dir="${basedir}/projects/tool" target="clean"/>
         <ant dir="${basedir}/projects/tool_air" target="clean"/>
     </target>
-
 
     <target name="airsdk-clean" description="Delete files copied from the AIR SDK">
         <!-- Delete AIR files and directories from 'prepare' target -->
@@ -550,6 +575,9 @@
     </target>
     <target name="framework-test" description="Tests for 'framework' project">
         <ant dir="${basedir}/projects/framework" target="test"/>
+    </target>
+    <target name="mx-test" description="Tests for the 'mx' project">
+        <ant dir="${basedir}/projects/mx" target="test"/>
     </target>
 
     <target name="experimental" description="Clean build of experimental.swc">

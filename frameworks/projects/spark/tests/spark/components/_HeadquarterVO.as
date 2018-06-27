@@ -17,11 +17,26 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+package spark.components {
+    [Bindable]
+    public class _HeadquarterVO {
+        public var name:String;
+        public var address:String;
 
-import mx.core.mx_internal;
+        public function _HeadquarterVO(name:String, address:String)
+        {
+            this.name = name;
+            this.address = address;
+        }
 
-/**
- *  @private
- *  Version string for this class.
- */
-mx_internal static const VERSION:String = "4.17.0.0";
+        public function get label():String
+        {
+            return name;
+        }
+
+        public function toString():String
+        {
+            return "HeadquarterVO{name=" + String(name) + "}";
+        }
+    }
+}
